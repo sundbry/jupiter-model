@@ -1,4 +1,6 @@
-import { Geometry, Material, Mesh, MeshLambertMaterial, PerspectiveCamera, Scene, SphereGeometry, SpotLight, SpotLightHelper, Vector3, WebGLRenderer } from 'three';
+import { Geometry, Material, Mesh, MeshLambertMaterial, PerspectiveCamera, Scene, SphereGeometry, SpotLight, SpotLightHelper, Texture, TextureLoader, Vector3, WebGLRenderer } from 'three';
+
+import jupiterJpg from 'url:./jupiter2_1k.jpg'
 
 const scene = new Scene();
 
@@ -23,7 +25,6 @@ class JupiterModel {
 
   render(time: number): void {
     time *= 0.001;  // convert 1time to seconds
-    this.planet_.rotation.z = -0.4;
     this.planet_.rotation.x = 0.4;
     this.planet_.rotation.y = time / 4;
     this.renderer_.render(this.scene_, this.camera_);
@@ -45,10 +46,17 @@ class JupiterModel {
 
   createPlanetMaterial(): Material {
     return new MeshLambertMaterial({
-      color: 0xd4ca48,
-      emissive: 0x0000ff,
-      emissiveIntensity: 0.3,
+      // color: 0xd4ca48,
+      emissive: 0xa010bf,
+      emissiveIntensity: 0.05,
+      map: this.createPlanetTexture(),
     });
+  }
+
+  createPlanetTexture(): Texture {
+    // Textures from http://planetpixelemporium.com/jupiter.html
+    const loader = new TextureLoader();
+    return loader.load(jupiterJpg);
   }
 
   createCamera(): PerspectiveCamera {
