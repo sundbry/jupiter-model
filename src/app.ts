@@ -23,13 +23,17 @@ class JupiterModel {
   // Tilt vector (radians)
   tilt_: Vector3 = new Vector3(-0.3, 0.9, 0.3);
   // Angular velocity of rotation
-  omega_: number = 0.005;
+  omega_: number = 0.002;
+  // Initial angular offset
+  // Just before the great red spot enters the picture
+  omega0_: number = 9 * Math.PI / 8;
   q_: Quaternion = new Quaternion();
 
   constructor(canvas, scene: Scene) {
     this.scene_ = scene;
     console.log("Constructing JupiterModel");
-    this.renderer_ = new WebGLRenderer({canvas, antialias: true});
+    // No antialiasing for performance
+    this.renderer_ = new WebGLRenderer({canvas, antialias: false});
     const w = canvas.offsetWidth;
     const h = canvas.offsetHeight;
     this.renderer_.setSize(w, h);
@@ -47,19 +51,24 @@ class JupiterModel {
     this.animationFunction_ = (t) => this.render(t);
   }
 
-  render(time: number): void {
+  rotatePlanet(radians: number) {
     // Rotate about Y axis of planet
     const v = new Vector3(0, 1, 0);
     v.applyQuaternion(this.q_);
     const q = new Quaternion();
-    q.setFromAxisAngle(v, this.omega_);
+    q.setFromAxisAngle(v, radians);
     this.planet_.applyQuaternion(q);
+  }
+
+  render(time: number): void {
+    this.rotatePlanet(this.omega_);
     this.renderer_.render(this.scene_, this.camera_);
     requestAnimationFrame(this.animationFunction_);
   }
 
   initialize(): void {
     console.log("Initializing JupiterModel");
+    this.rotatePlanet(this.omega0_);
     requestAnimationFrame(this.animationFunction_);
   }
 
