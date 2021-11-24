@@ -1,6 +1,15 @@
-import { Geometry, Material, Mesh, MeshLambertMaterial, PerspectiveCamera, Scene, SphereGeometry, SpotLight, SpotLightHelper, Texture, TextureLoader, Vector3, WebGLRenderer } from 'three';
+import { Euler, Geometry, Material, Matrix4, Mesh, MeshLambertMaterial, PerspectiveCamera, Quaternion, Scene, SphereGeometry, SpotLight, SpotLightHelper, Texture, TextureLoader, Vector3, WebGLRenderer } from 'three';
 
 import jupiterJpg from 'url:./jupiter2_1k.jpg'
+
+// Earth with clouds:
+// https://github.com/enesser/earth-webgl
+
+// Stripe globe
+// https://stripe.com/blog/globe
+
+// UC Davis: Quaternions
+// https://www.youtube.com/watch?v=mHVwd8gYLnI
 
 const scene = new Scene();
 
@@ -11,22 +20,44 @@ class JupiterModel {
   renderer_: WebGLRenderer;
   scene_: Scene;
   camera_: PerspectiveCamera;
+  // Z-Tilt (radians)
+  phi_: number = 0.3;
+  // Angular velocity of rotation
+  omega_: number = 0.001;
 
   constructor(canvas, scene: Scene) {
     this.scene_ = scene;
     console.log("Constructing JupiterModel");
-    this.renderer_ = new WebGLRenderer({canvas});
+    this.renderer_ = new WebGLRenderer({canvas, antialias: true});
     this.camera_ = this.createCamera();
     this.planet_ = this.createPlanet();
+    // this.rotatePlanet(new Vector3(0, 0, 1).normalize(), 0.5);
+    // this.planet_.rotateZ(this.phi_);
+    const qz = new Quaternion();
+    qz.setFromAxisAngle(new Vector3(0, 0, 1).normalize(), this.phi_);
+    this.planet_.applyQuaternion(qz);
     this.scene_.add(this.planet_);
     this.scene_.add(this.createSolarLight());
     this.animationFunction_ = (t) => this.render(t);
   }
 
+  rotatePlanet(axis, radians): void {
+    const rotWorldMatrix = new Matrix4();
+    rotWorldMatrix.makeRotationAxis(axis, radians);
+    rotWorldMatrix.multiply(this.planet_.matrix);
+    this.planet_.matrix = rotWorldMatrix;
+    //this.planet_.rotation.setEulerFromRotationMatrix(this.planet_.matrix);
+    this.planet_.rotation.setFromRotationMatrix(this.planet_.matrix);
+  }
+
   render(time: number): void {
-    time *= 0.001;  // convert 1time to seconds
-    this.planet_.rotation.x = 0.4;
-    this.planet_.rotation.y = time / 4;
+    const x = Math.cos(this.phi_);
+    const y = Math.sin(this.phi_);
+    const q = new Quaternion();
+    const v = new Vector3(x, y, 0);
+    v.cross(new Vector3(0, 0, -1));
+    q.setFromAxisAngle(v, this.omega_);
+    this.planet_.applyQuaternion(q);
     this.renderer_.render(this.scene_, this.camera_);
     requestAnimationFrame(this.animationFunction_);
   }
@@ -37,7 +68,16 @@ class JupiterModel {
   }
 
   createPlanet(): Mesh {
-    return new Mesh(this.createPlanetGeometry(), this.createPlanetMaterial());
+    const mesh = new Mesh(this.createPlanetGeometry(), this.createPlanetMaterial());
+    // mesh.setRotationFromAxisAngle(new Vector3(0, 0, 1), 0.5);
+    //mesh.setRotationFromEuler(new Euler(0, 0, 0.5));
+    /*
+    const q = new Quaternion();
+    q.setFromAxisAngle( new Vector3( 0, 0, 1 ), 0);
+    mesh.applyQuaternion(q);
+    */
+
+    return mesh;
   }
 
   createPlanetGeometry(): Geometry {
