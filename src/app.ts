@@ -1,6 +1,7 @@
-import { Euler, Geometry, Material, Matrix4, Mesh, MeshLambertMaterial, PerspectiveCamera, Quaternion, Scene, SphereGeometry, SpotLight, SpotLightHelper, Texture, TextureLoader, Vector3, WebGLRenderer } from 'three';
+import { Euler, Geometry, Group, Material, Matrix4, Mesh, MeshLambertMaterial, MeshPhongMaterial, PerspectiveCamera, Quaternion, Scene, SphereGeometry, SpotLight, SpotLightHelper, Texture, TextureLoader, Vector3, WebGLRenderer } from 'three';
 
 import jupiterJpg from 'url:./jupiter2_1k.jpg'
+// import jupiterJpg from 'url:./jupitermap.jpg'
 
 // Earth with clouds:
 // https://github.com/enesser/earth-webgl
@@ -28,6 +29,7 @@ class JupiterModel {
   // Just before the great red spot enters the picture
   omega0_: number = 9 * Math.PI / 8;
   q_: Quaternion = new Quaternion();
+  radius_: number = 1;
 
   constructor(canvas, scene: Scene) {
     this.scene_ = scene;
@@ -73,19 +75,36 @@ class JupiterModel {
   }
 
   createPlanet(): Mesh {
-    const mesh = new Mesh(this.createPlanetGeometry(), this.createPlanetMaterial());
-    return mesh;
+    const core = new Mesh(this.createPlanetGeometry(), this.createPlanetMaterial());
+    const atmosphere = this.createAtmosphere();
+    const group = new Group();
+    group.add(core);
+    group.add(atmosphere);
+    return group;
+  }
+
+  createAtmosphere(): Mesh {
+    const geometry = new SphereGeometry(1.03 * this.radius_, /*widthSegments=*/32, /*heightSegments=*/32);
+    const material = new MeshPhongMaterial({
+      // color: 0xd4ca48,
+      emissive: 0xff3807,
+      emissiveIntensity: 0.95,
+      opacity: 0.1,
+      transparent: true,
+    });
+    return new Mesh(geometry, material);
   }
 
   createPlanetGeometry(): Geometry {
-    return new SphereGeometry(/*radius=*/1, /*widthSegments=*/32, /*heightSegments=*/32);
+    return new SphereGeometry(this.radius_, /*widthSegments=*/32, /*heightSegments=*/32);
   }
 
   createPlanetMaterial(): Material {
     return new MeshLambertMaterial({
       // color: 0xd4ca48,
-      emissive: 0xa010bf,
-      emissiveIntensity: 0.05,
+      // emissive: 0xa010bf,
+      emissive: 0xad2301,
+      emissiveIntensity: 0.12,
       map: this.createPlanetTexture(),
     });
   }
@@ -107,7 +126,7 @@ class JupiterModel {
 
   createSolarLight(): SpotLight {
     var spotlight = new SpotLight(0xffffff);
-    spotlight.position.set(-2, 3, 5);
+    spotlight.position.set(-4, 3, 5);
     var spotLightHelper = new SpotLightHelper(spotlight);
     spotlight.add(spotLightHelper);
     return spotlight;
