@@ -30,7 +30,10 @@ class JupiterModel {
     this.scene_ = scene;
     console.log("Constructing JupiterModel");
     this.renderer_ = new WebGLRenderer({canvas, antialias: true});
-    this.camera_ = this.createCamera();
+    const w = canvas.offsetWidth;
+    const h = canvas.offsetHeight;
+    this.renderer_.setSize(w, h);
+    this.camera_ = this.createCamera(parseInt(w / h));
     this.planet_ = this.createPlanet();
     for (var i = 0; i <= 2; i++) {
       const q = new Quaternion();
@@ -84,9 +87,8 @@ class JupiterModel {
     return loader.load(jupiterJpg);
   }
 
-  createCamera(): PerspectiveCamera {
+  createCamera(aspect: number): PerspectiveCamera {
     const fov = 75;
-    const aspect = 2;  // the canvas default
     const near = 0.1;
     const far = 5;
     const camera = new PerspectiveCamera(fov, aspect, near, far);
