@@ -20,10 +20,11 @@ class JupiterModel {
   renderer_: WebGLRenderer;
   scene_: Scene;
   camera_: PerspectiveCamera;
-  // Z-Tilt (radians)
-  phi_: number = 0.3;
+  // Tilt vector (radians)
+  tilt_: Vector3 = new Vector3(-0.3, 0.9, 0.3);
   // Angular velocity of rotation
-  omega_: number = 0.001;
+  omega_: number = 0.005;
+  q_: Quaternion = new Quaternion();
 
   constructor(canvas, scene: Scene) {
     this.scene_ = scene;
@@ -31,31 +32,23 @@ class JupiterModel {
     this.renderer_ = new WebGLRenderer({canvas, antialias: true});
     this.camera_ = this.createCamera();
     this.planet_ = this.createPlanet();
-    // this.rotatePlanet(new Vector3(0, 0, 1).normalize(), 0.5);
-    // this.planet_.rotateZ(this.phi_);
-    const qz = new Quaternion();
-    qz.setFromAxisAngle(new Vector3(0, 0, 1).normalize(), this.phi_);
-    this.planet_.applyQuaternion(qz);
+    for (var i = 0; i <= 2; i++) {
+      const q = new Quaternion();
+      const phi = this.tilt_.getComponent(i);
+      q.setFromAxisAngle(new Vector3(i==0?1:0, i==1?1:0, i==2?1:0), phi);
+      this.q_.multiply(q);
+    }
+    this.planet_.applyQuaternion(this.q_);
     this.scene_.add(this.planet_);
     this.scene_.add(this.createSolarLight());
     this.animationFunction_ = (t) => this.render(t);
   }
 
-  rotatePlanet(axis, radians): void {
-    const rotWorldMatrix = new Matrix4();
-    rotWorldMatrix.makeRotationAxis(axis, radians);
-    rotWorldMatrix.multiply(this.planet_.matrix);
-    this.planet_.matrix = rotWorldMatrix;
-    //this.planet_.rotation.setEulerFromRotationMatrix(this.planet_.matrix);
-    this.planet_.rotation.setFromRotationMatrix(this.planet_.matrix);
-  }
-
   render(time: number): void {
-    const x = Math.cos(this.phi_);
-    const y = Math.sin(this.phi_);
+    // Rotate about Y axis of planet
+    const v = new Vector3(0, 1, 0);
+    v.applyQuaternion(this.q_);
     const q = new Quaternion();
-    const v = new Vector3(x, y, 0);
-    v.cross(new Vector3(0, 0, -1));
     q.setFromAxisAngle(v, this.omega_);
     this.planet_.applyQuaternion(q);
     this.renderer_.render(this.scene_, this.camera_);
@@ -69,14 +62,6 @@ class JupiterModel {
 
   createPlanet(): Mesh {
     const mesh = new Mesh(this.createPlanetGeometry(), this.createPlanetMaterial());
-    // mesh.setRotationFromAxisAngle(new Vector3(0, 0, 1), 0.5);
-    //mesh.setRotationFromEuler(new Euler(0, 0, 0.5));
-    /*
-    const q = new Quaternion();
-    q.setFromAxisAngle( new Vector3( 0, 0, 1 ), 0);
-    mesh.applyQuaternion(q);
-    */
-
     return mesh;
   }
 
