@@ -30,10 +30,10 @@ class JupiterModel {
   omega0_: number = 9 * Math.PI / 8;
   q_: Quaternion = new Quaternion();
   radius_: number = 1;
+  debug_: boolean = false;
 
   constructor(canvas, scene: Scene) {
     this.scene_ = scene;
-    console.log("Constructing JupiterModel");
     // No antialiasing for performance
     this.renderer_ = new WebGLRenderer({canvas, antialias: false});
     const w = canvas.offsetWidth;
@@ -69,7 +69,6 @@ class JupiterModel {
   }
 
   initialize(): void {
-    console.log("Initializing JupiterModel");
     this.rotatePlanet(this.omega0_);
     requestAnimationFrame(this.animationFunction_);
   }
@@ -127,8 +126,10 @@ class JupiterModel {
   createSolarLight(): SpotLight {
     var spotlight = new SpotLight(0xffffff);
     spotlight.position.set(-4, 3, 5);
-    var spotLightHelper = new SpotLightHelper(spotlight);
-    spotlight.add(spotLightHelper);
+    if (this.debug_) {
+      var spotLightHelper = new SpotLightHelper(spotlight);
+      spotlight.add(spotLightHelper);
+    }
     return spotlight;
   }
 
