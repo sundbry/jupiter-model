@@ -1,6 +1,6 @@
 import { Euler, Geometry, Group, Material, Matrix4, Mesh, MeshLambertMaterial, MeshPhongMaterial, PerspectiveCamera, Quaternion, Scene, SphereGeometry, SpotLight, SpotLightHelper, Texture, TextureLoader, Vector3, WebGLRenderer } from 'three';
 
-import jupiterJpg from 'url:./jupiter2_1k.jpg'
+import jupiterJpg from 'url:./jupiter2_4k.jpg'
 // import jupiterJpg from 'url:./jupitermap.jpg'
 
 // Earth with clouds:
